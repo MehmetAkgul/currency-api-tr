@@ -1,0 +1,12 @@
+{
+  "name": "currency-api-tr",
+  "version": "1.0.0",
+  "description": "TR döviz ve altın API — TCMB + truncgil + fawaz kaynakları",
+  "type": "module",
+  "scripts": {
+    "fetch": "node scripts/fetch-rates.js"
+  },
+  "dependencies": {
+    "xml2js": "^0.6.2"
+  }
+}
