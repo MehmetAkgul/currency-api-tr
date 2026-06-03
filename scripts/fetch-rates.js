@@ -3,9 +3,10 @@ import { execSync } from 'child_process';
 import { Agent, fetch as uFetch } from 'undici';
 import { parseTCMB } from './parse-tcmb.js';
 
-// truncgil SSL sorununu aşmak için undici Agent
+// undici agent to bypass truncgil's self-signed SSL certificate
 const insecureAgent = new Agent({ connect: { rejectUnauthorized: false } });
 
+// Parses Turkish number format: "45.823,50" → 45823.50
 function parseTR(str) {
   if (!str || str === '') return NaN;
   return parseFloat(str.replace(/\./g, '').replace(',', '.'));
@@ -18,7 +19,7 @@ async function fetchTruncgil() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
-    console.error('truncgil hatası:', err.message);
+    console.error('truncgil error:', err.message);
     return null;
   }
 }
@@ -33,7 +34,7 @@ async function fetchFawaz() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
-    console.error('fawaz hatası:', err.message);
+    console.error('fawaz error:', err.message);
     return null;
   }
 }
@@ -48,11 +49,12 @@ async function fetchBigpara() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
-    console.warn('bigpara erişilemedi (opsiyonel):', err.message);
+    console.warn('bigpara unavailable (optional):', err.message);
     return null;
   }
 }
 
+// Sanity check: warn if bigpara USD deviates >5% from TCMB
 function validateWithBigpara(bigparaData, tcmbRates) {
   if (!bigparaData || !tcmbRates?.USD) return;
   try {
@@ -66,51 +68,34 @@ function validateWithBigpara(bigparaData, tcmbRates) {
     if (bpBid > 0 && tcmbBid > 0) {
       const diff = Math.abs(bpBid - tcmbBid) / tcmbBid;
       if (diff > 0.05) {
-        console.warn(`[Uyari] USD bigpara/TCMB sapma %${(diff * 100).toFixed(1)} — bigpara: ${bpBid}, TCMB: ${tcmbBid}`);
+        console.warn(`[warn] USD bigpara/TCMB deviation ${(diff * 100).toFixed(1)}% — bigpara: ${bpBid}, TCMB: ${tcmbBid}`);
       }
     }
   } catch (err) {
-    console.warn('bigpara dogrulama hatasi:', err.message);
+    console.warn('bigpara validation error:', err.message);
   }
 }
 
-// TCMB kur kodu → try objesi key mapleme
+// TCMB currency code → try object key
 const TCMB_KEY_MAP = {
-  USD: 'usd',
-  EUR: 'eur',
-  GBP: 'gbp',
-  CHF: 'chf',
-  JPY: 'jpy',
-  SAR: 'sar',
-  AED: 'aed',
-  AZN: 'azn',
-  CNY: 'cny',
-  KZT: 'kzt',
-  KRW: 'krw',
-  QAR: 'qar',
-  RUB: 'rub',
-  CAD: 'cad',
-  AUD: 'aud',
-  SEK: 'sek',
-  NOK: 'nok',
-  DKK: 'dkk',
-  RON: 'ron',
-  PKR: 'pkr',
-  KWD: 'kwd',
-  XDR: 'xdr'
+  USD: 'usd', EUR: 'eur', GBP: 'gbp', CHF: 'chf', JPY: 'jpy',
+  SAR: 'sar', AED: 'aed', AZN: 'azn', CNY: 'cny', KZT: 'kzt',
+  KRW: 'krw', QAR: 'qar', RUB: 'rub', CAD: 'cad', AUD: 'aud',
+  SEK: 'sek', NOK: 'nok', DKK: 'dkk', RON: 'ron', PKR: 'pkr',
+  KWD: 'kwd', XDR: 'xdr'
 };
 
-// truncgil altın key mapleme
+// truncgil gold key → output key
 const GOLD_KEY_MAP = {
-  'gram-altin': 'xau_gram',
-  'ceyrek-altin': 'xau_ceyrek',
-  'yarim-altin': 'xau_yarim',
-  'tam-altin': 'xau_tam',
+  'gram-altin':      'xau_gram',
+  'ceyrek-altin':    'xau_ceyrek',
+  'yarim-altin':     'xau_yarim',
+  'tam-altin':       'xau_tam',
   'cumhuriyet-altini': 'xau_cumhuriyet'
 };
 
 async function main() {
-  console.log('Kur verisi çekiliyor...');
+  console.log('Fetching exchange rates...');
 
   const [tcmbRates, truncgilData, fawazData, bigparaData] = await Promise.all([
     parseTCMB(),
@@ -119,19 +104,17 @@ async function main() {
     fetchBigpara()
   ]);
 
-  // Birincil kaynak kontrolü
   if (!tcmbRates && !truncgilData) {
-    console.error('Tüm birincil kaynaklar başarısız, JSON güncellenmedi');
+    console.error('All primary sources failed — JSON not updated');
     process.exit(0);
   }
 
-  // Bigpara doğrulama (opsiyonel, veri akışını etkilemez)
   validateWithBigpara(bigparaData, tcmbRates);
 
   const sources = [];
   const tryObj = {};
 
-  // 1. TCMB dövizleri
+  // 1. TCMB official forex rates (bid/ask)
   if (tcmbRates) {
     sources.push('tcmb');
     for (const [tcmbCode, key] of Object.entries(TCMB_KEY_MAP)) {
@@ -139,10 +122,10 @@ async function main() {
         tryObj[key] = tcmbRates[tcmbCode];
       }
     }
-    console.log(`TCMB: ${Object.keys(tcmbRates).length} kur alındı`);
+    console.log(`TCMB: ${Object.keys(tcmbRates).length} currencies fetched`);
   }
 
-  // 2. truncgil altın verileri
+  // 2. truncgil gold prices (primary gold source)
   let truncgilOk = false;
   if (truncgilData) {
     truncgilOk = true;
@@ -158,21 +141,22 @@ async function main() {
         tryObj[outKey] = { bid, ask };
       }
     }
-    console.log('truncgil: altın verileri alındı');
+    console.log('truncgil: gold prices fetched');
   }
 
-  // 3. fawaz — UZS, XAG, XPT
+  // 3. fawaz — UZS, HUF, XAG (silver), XPT (platinum)
+  //    These are not available from TCMB or truncgil.
   if (fawazData?.try) {
     sources.push('fawaz');
     const ft = fawazData.try;
 
-    // UZS
+    // UZS — Uzbekistani som
     if (ft.uzs && ft.uzs > 0) {
       const uzsRate = 1 / ft.uzs;
       tryObj['uzs'] = { bid: parseFloat(uzsRate.toFixed(6)), ask: parseFloat(uzsRate.toFixed(6)) };
     }
 
-    // XAG gram (troy ons → gram dönüşümü: 1 troy ons = 31.1035 gram)
+    // XAG — silver gram (troy oz → gram: 1 troy oz = 31.1035 g)
     if (ft.xag && ft.xag > 0) {
       const xagGramTRY = (1 / ft.xag) / 31.1035;
       tryObj['xag_gram'] = {
@@ -181,7 +165,7 @@ async function main() {
       };
     }
 
-    // XPT gram
+    // XPT — platinum gram
     if (ft.xpt && ft.xpt > 0) {
       const xptGramTRY = (1 / ft.xpt) / 31.1035;
       tryObj['xpt_gram'] = {
@@ -190,18 +174,19 @@ async function main() {
       };
     }
 
-    // HUF — TCMB listesinde yok, tek kaynak fawaz
+    // HUF — Hungarian forint (not listed by TCMB)
     if (ft.huf && ft.huf > 0) {
       const hufRate = 1 / ft.huf;
       tryObj['huf'] = { bid: parseFloat(hufRate.toFixed(4)), ask: parseFloat(hufRate.toFixed(4)) };
     }
 
-    console.log('fawaz: UZS, XAG, XPT, HUF alındı');
+    console.log('fawaz: UZS, HUF, XAG, XPT fetched');
   } else {
-    console.warn('fawaz başarısız — xag/xpt/uzs eksik kalacak');
+    console.warn('fawaz failed — xag/xpt/uzs/huf will be missing');
   }
 
-  // 4. truncgil çöktüyse bigpara'dan gram altın + türevler
+  // 4. bigpara gold fallback — used only when truncgil is down
+  //    Derives quarter/half/full coin prices from gram price using standard weights + market premium coefficients.
   if (!truncgilOk && bigparaData) {
     try {
       const items = bigparaData?.data?.items || bigparaData?.items || [];
@@ -211,29 +196,28 @@ async function main() {
         const ask = parseFloat(String(gldItem.satis || gldItem.ask || '0').replace(',', '.'));
         if (bid > 0 && ask > 0) {
           tryObj['xau_gram'] = { bid, ask };
-          const purity = 0.916;
+          const purity = 0.916; // 22k gold
           const COIN_PREMIUM = { ceyrek: 1.0410, yarim: 1.0400, tam: 1.0337, cumhuriyet: 1.0133 };
-          tryObj['xau_ceyrek']     = { bid: parseFloat((bid * 1.75 * purity * COIN_PREMIUM.ceyrek).toFixed(2)),  ask: parseFloat((ask * 1.75 * purity * COIN_PREMIUM.ceyrek).toFixed(2)) };
-          tryObj['xau_yarim']      = { bid: parseFloat((bid * 3.5  * purity * COIN_PREMIUM.yarim).toFixed(2)),  ask: parseFloat((ask * 3.5  * purity * COIN_PREMIUM.yarim).toFixed(2)) };
-          tryObj['xau_tam']        = { bid: parseFloat((bid * 7    * purity * COIN_PREMIUM.tam).toFixed(2)),    ask: parseFloat((ask * 7    * purity * COIN_PREMIUM.tam).toFixed(2)) };
+          tryObj['xau_ceyrek']     = { bid: parseFloat((bid * 1.75  * purity * COIN_PREMIUM.ceyrek).toFixed(2)),     ask: parseFloat((ask * 1.75  * purity * COIN_PREMIUM.ceyrek).toFixed(2)) };
+          tryObj['xau_yarim']      = { bid: parseFloat((bid * 3.5   * purity * COIN_PREMIUM.yarim).toFixed(2)),      ask: parseFloat((ask * 3.5   * purity * COIN_PREMIUM.yarim).toFixed(2)) };
+          tryObj['xau_tam']        = { bid: parseFloat((bid * 7     * purity * COIN_PREMIUM.tam).toFixed(2)),        ask: parseFloat((ask * 7     * purity * COIN_PREMIUM.tam).toFixed(2)) };
           tryObj['xau_cumhuriyet'] = { bid: parseFloat((bid * 7.216 * purity * COIN_PREMIUM.cumhuriyet).toFixed(2)), ask: parseFloat((ask * 7.216 * purity * COIN_PREMIUM.cumhuriyet).toFixed(2)) };
           sources.push('bigpara(gold)');
-          console.log('bigpara: truncgil yedeği — gram altın alındı, türevler hesaplandı');
+          console.log('bigpara: truncgil fallback — gram gold + coin derivatives calculated');
         }
       }
     } catch (err) {
-      console.warn('bigpara altın parse hatası:', err.message);
+      console.warn('bigpara gold parse error:', err.message);
     }
   }
 
-  // Mevcut try-full.json'u oku — bigpara da yoksa son çare stale cache
+  // 5. Last resort: fill missing gold keys from previous JSON (marks as stale)
   let existingTry = {};
   try {
     const existing = JSON.parse(readFileSync('v1/currencies/try-full.json', 'utf8'));
     existingTry = existing.try || {};
   } catch (_) {}
 
-  // Altın anahtarları hâlâ eksikse eski veriden tamamla ve stale işaretle
   const goldKeys = ['xau_gram', 'xau_ceyrek', 'xau_yarim', 'xau_tam', 'xau_cumhuriyet', 'xag_gram', 'xpt_gram'];
   let usedStaleGold = false;
   for (const k of goldKeys) {
@@ -243,13 +227,13 @@ async function main() {
     }
   }
   if (usedStaleGold) {
-    console.warn('truncgil+bigpara down — eski altın verileri kullanıldı, is_stale: true');
+    console.warn('truncgil + bigpara both down — using cached gold prices, is_stale: true');
   }
 
   const bigparaGoldOk = sources.includes('bigpara(gold)');
   const isStale = (!truncgilOk && !bigparaGoldOk) || usedStaleGold;
 
-  // try-full.json
+  // Build try-full.json — rich format with bid/ask and gold
   const tryFull = {
     date: new Date().toISOString().split('T')[0],
     updated_at: new Date().toISOString(),
@@ -258,7 +242,7 @@ async function main() {
     try: tryObj
   };
 
-  // try.json (fawaz-compat: sadece dövizler, bid/ask yerine ask bazlı tek değer)
+  // Build try.json — fawaz-compatible format (ask-based single rate, currencies only)
   const tryCompat = {
     date: tryFull.date,
     try: Object.fromEntries(
@@ -273,24 +257,22 @@ async function main() {
     )
   };
 
-  // Git commit — önce pull, sonra yaz, sonra push (race condition önlemi)
+  // Git: pull before write to avoid race conditions with concurrent runs
   const timeStr = new Date().toISOString().split('T')[1].slice(0, 5);
   const msg = `rates: ${tryFull.date} ${timeStr} UTC`;
 
   execSync('git config user.email "actions@github.com"', { stdio: 'pipe', timeout: 10_000 });
   execSync('git config user.name "currency-api-bot"', { stdio: 'pipe', timeout: 10_000 });
 
-  // Remote'u çek — JSON yazmadan önce (unstaged changes olmadan pull)
   try {
     execSync('git pull --rebase origin main', { stdio: 'pipe', timeout: 30_000 });
   } catch (e) {
-    console.warn('git pull uyarısı (remote yok veya up-to-date):', e.message);
+    console.warn('git pull warning:', e.message);
   }
 
-  // JSON dosyalarını yaz
   writeFileSync('v1/currencies/try-full.json', JSON.stringify(tryFull, null, 2));
   writeFileSync('v1/currencies/try.json', JSON.stringify(tryCompat, null, 2));
-  console.log('JSON dosyaları yazıldı.');
+  console.log('JSON files written.');
 
   execSync('git add v1/', { stdio: 'pipe', timeout: 10_000 });
   const diff = execSync('git diff --cached --stat', { stdio: 'pipe', timeout: 10_000 }).toString();
@@ -300,7 +282,7 @@ async function main() {
   }
   execSync(`git commit -m "${msg}"`, { stdio: 'pipe', timeout: 10_000 });
 
-  // Push retry — sadece push çakışırsa pull + push tekrarla
+  // Push with retry — on conflict, pull --rebase then push again
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
       execSync('git push origin main', { stdio: 'pipe', timeout: 30_000 });
@@ -308,15 +290,15 @@ async function main() {
       break;
     } catch (e) {
       if (attempt === 3) {
-        console.error('Push 3 denemede başarısız — Actions kırmızı işaretleniyor');
+        console.error('Push failed after 3 attempts — marking Actions run as failed');
         process.exit(1);
       }
-      console.warn(`Push attempt ${attempt}/3 başarısız, rebase ile tekrar:`, e.message);
+      console.warn(`Push attempt ${attempt}/3 failed, retrying after rebase:`, e.message);
       await new Promise(r => setTimeout(r, 2000));
       try {
         execSync('git pull --rebase origin main', { stdio: 'pipe', timeout: 30_000 });
       } catch (pullErr) {
-        console.warn('Retry pull uyarısı:', pullErr.message);
+        console.warn('Retry pull warning:', pullErr.message);
       }
     }
   }
