@@ -1,7 +1,7 @@
 {
   "date": "2026-06-03",
-  "updated_at": "2026-06-03T08:03:19.778Z",
-  "is_stale": false,
+  "updated_at": "2026-06-03T08:08:04.141Z",
+  "is_stale": true,
   "sources": [
     "tcmb",
     "fawaz"
