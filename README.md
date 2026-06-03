@@ -64,9 +64,12 @@ https://cdn.jsdelivr.net/gh/MehmetAkgul/currency-api-tr@main/v1/currencies/try.j
 
 | Kaynak | Veri | Güncelleme |
 |--------|------|------------|
-| [TCMB](https://www.tcmb.gov.tr) | Resmi alış/satış kurları (22 döviz) | Günlük (iş günü) |
-| [truncgil](https://finans.truncgil.com) | Gram altın, çeyrek, yarım, tam, Cumhuriyet | Canlı |
-| [fawaz](https://github.com/fawazahmed0/exchange-api) | UZS, XAG (gümüş), XPT (platin) | Günlük |
+| [TCMB](https://www.tcmb.gov.tr) | Resmi alış/satış kurları (23 döviz) | Günlük (iş günü ~15:30 TSİ) |
+| [truncgil](https://finans.truncgil.com) | Gram altın, çeyrek, yarım, tam, Cumhuriyet (birincil) | Canlı |
+| [BigPara](https://bigpara.hurriyet.com.tr) | Gram altın yedek (truncgil down olduğunda) | Canlı |
+| [fawazahmed0](https://github.com/fawazahmed0/exchange-api) | UZS, HUF, XAG (gümüş), XPT (platin) | Günlük |
+
+> **Altın fallback zinciri:** truncgil → bigpara → önceki JSON (stale)
 
 ---
 
