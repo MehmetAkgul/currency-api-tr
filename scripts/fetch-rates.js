@@ -190,7 +190,13 @@ async function main() {
       };
     }
 
-    console.log('fawaz: UZS, XAG, XPT alındı');
+    // HUF — TCMB listesinde yok, tek kaynak fawaz
+    if (ft.huf && ft.huf > 0) {
+      const hufRate = 1 / ft.huf;
+      tryObj['huf'] = { bid: parseFloat(hufRate.toFixed(4)), ask: parseFloat(hufRate.toFixed(4)) };
+    }
+
+    console.log('fawaz: UZS, XAG, XPT, HUF alındı');
   } else {
     console.warn('fawaz başarısız — xag/xpt/uzs eksik kalacak');
   }
