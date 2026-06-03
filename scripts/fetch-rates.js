@@ -241,40 +241,51 @@ async function main() {
     )
   };
 
-  writeFileSync('v1/currencies/try-full.json', JSON.stringify(tryFull, null, 2));
-  writeFileSync('v1/currencies/try.json', JSON.stringify(tryCompat, null, 2));
-  console.log('JSON dosyaları yazıldı: v1/currencies/try-full.json, v1/currencies/try.json');
-
-  // Git commit
+  // Git commit — önce pull, sonra yaz, sonra push (race condition önlemi)
   const timeStr = new Date().toISOString().split('T')[1].slice(0, 5);
   const msg = `rates: ${tryFull.date} ${timeStr} UTC`;
 
   execSync('git config user.email "actions@github.com"', { stdio: 'pipe', timeout: 10_000 });
   execSync('git config user.name "currency-api-bot"', { stdio: 'pipe', timeout: 10_000 });
 
-  // Push retry loop (max 3 deneme) — her denemede pull --rebase ile race condition önle
-  let pushed = false;
+  // Remote'u çek — JSON yazmadan önce (unstaged changes olmadan pull)
+  try {
+    execSync('git pull --rebase origin main', { stdio: 'pipe', timeout: 30_000 });
+  } catch (e) {
+    console.warn('git pull uyarısı (remote yok veya up-to-date):', e.message);
+  }
+
+  // JSON dosyalarını yaz
+  writeFileSync('v1/currencies/try-full.json', JSON.stringify(tryFull, null, 2));
+  writeFileSync('v1/currencies/try.json', JSON.stringify(tryCompat, null, 2));
+  console.log('JSON dosyaları yazıldı.');
+
+  execSync('git add v1/', { stdio: 'pipe', timeout: 10_000 });
+  const diff = execSync('git diff --cached --stat', { stdio: 'pipe', timeout: 10_000 }).toString();
+  if (!diff.trim()) {
+    console.log('No changes, skip commit');
+    process.exit(0);
+  }
+  execSync(`git commit -m "${msg}"`, { stdio: 'pipe', timeout: 10_000 });
+
+  // Push retry — sadece push çakışırsa pull + push tekrarla
   for (let attempt = 1; attempt <= 3; attempt++) {
     try {
-      execSync('git pull --rebase origin main', { stdio: 'pipe', timeout: 30_000 });
-      execSync('git add v1/', { stdio: 'pipe', timeout: 10_000 });
-      const diff = execSync('git diff --cached --stat', { stdio: 'pipe', timeout: 10_000 }).toString();
-      if (!diff.trim()) {
-        console.log('No changes, skip commit');
-        process.exit(0);
-      }
-      execSync(`git commit -m "${msg}"`, { stdio: 'pipe', timeout: 10_000 });
       execSync('git push origin main', { stdio: 'pipe', timeout: 30_000 });
-      pushed = true;
       console.log('Committed:', msg);
       break;
     } catch (e) {
-      console.warn(`Git attempt ${attempt}/3 başarısız:`, e.message);
       if (attempt === 3) {
         console.error('Push 3 denemede başarısız — Actions kırmızı işaretleniyor');
         process.exit(1);
       }
+      console.warn(`Push attempt ${attempt}/3 başarısız, rebase ile tekrar:`, e.message);
       await new Promise(r => setTimeout(r, 2000));
+      try {
+        execSync('git pull --rebase origin main', { stdio: 'pipe', timeout: 30_000 });
+      } catch (pullErr) {
+        console.warn('Retry pull uyarısı:', pullErr.message);
+      }
     }
   }
 }
