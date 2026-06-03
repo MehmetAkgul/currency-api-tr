@@ -201,14 +201,39 @@ async function main() {
     console.warn('fawaz başarısız — xag/xpt/uzs eksik kalacak');
   }
 
-  // Mevcut try-full.json'u oku — truncgil down olduğunda eski altın verilerini koru
+  // 4. truncgil çöktüyse bigpara'dan gram altın + türevler
+  if (!truncgilOk && bigparaData) {
+    try {
+      const items = bigparaData?.data?.items || bigparaData?.items || [];
+      const gldItem = items.find(i => i.sembol === 'GLDGR' || i.code === 'GLDGR');
+      if (gldItem) {
+        const bid = parseFloat(String(gldItem.alis || gldItem.bid || '0').replace(',', '.'));
+        const ask = parseFloat(String(gldItem.satis || gldItem.ask || '0').replace(',', '.'));
+        if (bid > 0 && ask > 0) {
+          tryObj['xau_gram'] = { bid, ask };
+          const purity = 0.916;
+          const COIN_PREMIUM = { ceyrek: 1.0410, yarim: 1.0400, tam: 1.0337, cumhuriyet: 1.0133 };
+          tryObj['xau_ceyrek']     = { bid: parseFloat((bid * 1.75 * purity * COIN_PREMIUM.ceyrek).toFixed(2)),  ask: parseFloat((ask * 1.75 * purity * COIN_PREMIUM.ceyrek).toFixed(2)) };
+          tryObj['xau_yarim']      = { bid: parseFloat((bid * 3.5  * purity * COIN_PREMIUM.yarim).toFixed(2)),  ask: parseFloat((ask * 3.5  * purity * COIN_PREMIUM.yarim).toFixed(2)) };
+          tryObj['xau_tam']        = { bid: parseFloat((bid * 7    * purity * COIN_PREMIUM.tam).toFixed(2)),    ask: parseFloat((ask * 7    * purity * COIN_PREMIUM.tam).toFixed(2)) };
+          tryObj['xau_cumhuriyet'] = { bid: parseFloat((bid * 7.216 * purity * COIN_PREMIUM.cumhuriyet).toFixed(2)), ask: parseFloat((ask * 7.216 * purity * COIN_PREMIUM.cumhuriyet).toFixed(2)) };
+          sources.push('bigpara(gold)');
+          console.log('bigpara: truncgil yedeği — gram altın alındı, türevler hesaplandı');
+        }
+      }
+    } catch (err) {
+      console.warn('bigpara altın parse hatası:', err.message);
+    }
+  }
+
+  // Mevcut try-full.json'u oku — bigpara da yoksa son çare stale cache
   let existingTry = {};
   try {
     const existing = JSON.parse(readFileSync('v1/currencies/try-full.json', 'utf8'));
     existingTry = existing.try || {};
   } catch (_) {}
 
-  // Altın anahtarları eksikse eski veriden tamamla ve stale işaretle
+  // Altın anahtarları hâlâ eksikse eski veriden tamamla ve stale işaretle
   const goldKeys = ['xau_gram', 'xau_ceyrek', 'xau_yarim', 'xau_tam', 'xau_cumhuriyet', 'xag_gram', 'xpt_gram'];
   let usedStaleGold = false;
   for (const k of goldKeys) {
@@ -218,10 +243,11 @@ async function main() {
     }
   }
   if (usedStaleGold) {
-    console.warn('truncgil down — eski altın verileri kullanıldı, is_stale: true');
+    console.warn('truncgil+bigpara down — eski altın verileri kullanıldı, is_stale: true');
   }
 
-  const isStale = !truncgilOk || usedStaleGold;
+  const bigparaGoldOk = sources.includes('bigpara(gold)');
+  const isStale = (!truncgilOk && !bigparaGoldOk) || usedStaleGold;
 
   // try-full.json
   const tryFull = {
