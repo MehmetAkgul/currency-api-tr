@@ -1,4 +1,4 @@
-import { writeFileSync } from 'fs';
+import { writeFileSync, readFileSync } from 'fs';
 import { execSync } from 'child_process';
 import { Agent, fetch as uFetch } from 'undici';
 import { parseTCMB } from './parse-tcmb.js';
@@ -143,7 +143,9 @@ async function main() {
   }
 
   // 2. truncgil altın verileri
+  let truncgilOk = false;
   if (truncgilData) {
+    truncgilOk = true;
     sources.push('truncgil');
     for (const [truncKey, outKey] of Object.entries(GOLD_KEY_MAP)) {
       const entry = truncgilData[truncKey];
@@ -193,11 +195,33 @@ async function main() {
     console.warn('fawaz başarısız — xag/xpt/uzs eksik kalacak');
   }
 
+  // Mevcut try-full.json'u oku — truncgil down olduğunda eski altın verilerini koru
+  let existingTry = {};
+  try {
+    const existing = JSON.parse(readFileSync('v1/currencies/try-full.json', 'utf8'));
+    existingTry = existing.try || {};
+  } catch (_) {}
+
+  // Altın anahtarları eksikse eski veriden tamamla ve stale işaretle
+  const goldKeys = ['xau_gram', 'xau_ceyrek', 'xau_yarim', 'xau_tam', 'xau_cumhuriyet', 'xag_gram', 'xpt_gram'];
+  let usedStaleGold = false;
+  for (const k of goldKeys) {
+    if (!tryObj[k] && existingTry[k]) {
+      tryObj[k] = existingTry[k];
+      usedStaleGold = true;
+    }
+  }
+  if (usedStaleGold) {
+    console.warn('truncgil down — eski altın verileri kullanıldı, is_stale: true');
+  }
+
+  const isStale = !truncgilOk || usedStaleGold;
+
   // try-full.json
   const tryFull = {
     date: new Date().toISOString().split('T')[0],
     updated_at: new Date().toISOString(),
-    is_stale: false,
+    is_stale: isStale,
     sources,
     try: tryObj
   };
@@ -222,24 +246,36 @@ async function main() {
   console.log('JSON dosyaları yazıldı: v1/currencies/try-full.json, v1/currencies/try.json');
 
   // Git commit
-  try {
-    execSync('git config user.email "actions@github.com"', { stdio: 'pipe' });
-    execSync('git config user.name "currency-api-bot"', { stdio: 'pipe' });
-    execSync('git add v1/', { stdio: 'pipe' });
-    const diff = execSync('git diff --cached --stat', { stdio: 'pipe' }).toString();
-    if (!diff.trim()) {
-      console.log('No changes, skip commit');
-      process.exit(0);
+  const timeStr = new Date().toISOString().split('T')[1].slice(0, 5);
+  const msg = `rates: ${tryFull.date} ${timeStr} UTC`;
+
+  execSync('git config user.email "actions@github.com"', { stdio: 'pipe', timeout: 10_000 });
+  execSync('git config user.name "currency-api-bot"', { stdio: 'pipe', timeout: 10_000 });
+
+  // Push retry loop (max 3 deneme) — her denemede pull --rebase ile race condition önle
+  let pushed = false;
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      execSync('git pull --rebase origin main', { stdio: 'pipe', timeout: 30_000 });
+      execSync('git add v1/', { stdio: 'pipe', timeout: 10_000 });
+      const diff = execSync('git diff --cached --stat', { stdio: 'pipe', timeout: 10_000 }).toString();
+      if (!diff.trim()) {
+        console.log('No changes, skip commit');
+        process.exit(0);
+      }
+      execSync(`git commit -m "${msg}"`, { stdio: 'pipe', timeout: 10_000 });
+      execSync('git push origin main', { stdio: 'pipe', timeout: 30_000 });
+      pushed = true;
+      console.log('Committed:', msg);
+      break;
+    } catch (e) {
+      console.warn(`Git attempt ${attempt}/3 başarısız:`, e.message);
+      if (attempt === 3) {
+        console.error('Push 3 denemede başarısız — Actions kırmızı işaretleniyor');
+        process.exit(1);
+      }
+      await new Promise(r => setTimeout(r, 2000));
     }
-    const timeStr = new Date().toISOString().split('T')[1].slice(0, 5);
-    const msg = `rates: ${tryFull.date} ${timeStr} UTC`;
-    execSync(`git commit -m "${msg}"`, { stdio: 'pipe' });
-    execSync('git pull --rebase origin main', { stdio: 'pipe' });
-    execSync('git push origin main', { stdio: 'pipe' });
-    console.log('Committed:', msg);
-  } catch (e) {
-    console.error('Git işlemi başarısız:', e.message);
-    // push hatası olsa da JSON dosyası yazıldı — bir sonraki run düzeltir
   }
 }
 
