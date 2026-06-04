@@ -52,6 +52,33 @@
         "diesel_byn_per_liter": 1.85,
         "diesel_eur_per_liter": 0.77,
         "currency": "BYN"
+      },
+      "UA": {
+        "name": "Ukrayna",
+        "diesel_uah_per_liter": 56.5,
+        "diesel_eur_per_liter": 1.30,
+        "currency": "UAH",
+        "note": "Haziran 2026 — savas donemi fiyati, bolgeden bolgeye farklilik gosterir"
+      },
+      "BG": {
+        "name": "Bulgaristan",
+        "diesel_bgn_per_liter": 2.88,
+        "diesel_eur_per_liter": 1.47,
+        "currency": "BGN",
+        "note": "AB uyesi — Turkiye-Rusya transit guzergahi"
+      },
+      "RO": {
+        "name": "Romanya",
+        "diesel_ron_per_liter": 7.40,
+        "diesel_eur_per_liter": 1.49,
+        "currency": "RON",
+        "note": "AB uyesi — Ukrayna gecis guzergahi"
+      },
+      "MD": {
+        "name": "Moldova",
+        "diesel_eur_per_liter": 1.22,
+        "currency": "MDL",
+        "note": "Ukrayna guzergahi uzerinde transit nokta"
       }
     },
     "middle_east": {
