@@ -1,0 +1,41 @@
+name: Update Hac Fiyatlari
+
+on:
+  schedule:
+    # Her ayın 1'i 09:00 UTC — yıllık güncelleme tespiti için
+    - cron: '0 9 1 * *'
+    # Kasım başı ekstra run — Diyanet genelde Kasım'da açıklar
+    - cron: '0 9 1 11 *'
+  workflow_dispatch:
+
+concurrency:
+  group: hac-update
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Check and update hac prices
+        run: node scripts/fetch-hac-fiyatlari.js
+        env:
+          GIT_AUTHOR_NAME: currency-api-bot
+          GIT_AUTHOR_EMAIL: actions@github.com
+          GIT_COMMITTER_NAME: currency-api-bot
+          GIT_COMMITTER_EMAIL: actions@github.com
