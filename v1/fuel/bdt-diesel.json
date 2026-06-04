@@ -1,0 +1,77 @@
+{
+  "updated_at": "2026-06-04T13:32:13.501Z",
+  "manually_updated": "2026-06-04",
+  "is_stale": false,
+  "source": "Manuel guncelleme — GlobalPetrolPrices.com referans alinarak",
+  "source_url": "https://www.globalpetrolprices.com/diesel_prices/",
+  "update_note": "Otomatik API yok. Aylik manuel guncelleme gereklidir.",
+  "regions": {
+    "turkey": {
+      "TR": {
+        "name": "Turkiye",
+        "diesel_try_per_liter": 46.5,
+        "diesel_eur_per_liter": null,
+        "currency": "TRY",
+        "note": "EPDK haftalik belirleme"
+      }
+    },
+    "bdt": {
+      "RU": {
+        "name": "Rusya",
+        "diesel_rub_per_liter": 64,
+        "diesel_eur_per_liter": 0.71,
+        "currency": "RUB"
+      },
+      "KZ": {
+        "name": "Kazakistan",
+        "diesel_kzt_per_liter": 210,
+        "diesel_eur_per_liter": 0.49,
+        "currency": "KZT"
+      },
+      "AZ": {
+        "name": "Azerbaycan",
+        "diesel_azn_per_liter": 1.1,
+        "diesel_eur_per_liter": 0.65,
+        "currency": "AZN"
+      },
+      "UZ": {
+        "name": "Ozbekistan",
+        "diesel_uzs_per_liter": 8500,
+        "diesel_eur_per_liter": 0.58,
+        "currency": "UZS"
+      },
+      "GE": {
+        "name": "Gurcistan",
+        "diesel_gel_per_liter": 3.2,
+        "diesel_eur_per_liter": 1.15,
+        "currency": "GEL"
+      },
+      "BY": {
+        "name": "Belarus",
+        "diesel_byn_per_liter": 1.85,
+        "diesel_eur_per_liter": 0.77,
+        "currency": "BYN"
+      }
+    },
+    "middle_east": {
+      "IQ": {
+        "name": "Irak",
+        "diesel_eur_per_liter": 0.35,
+        "currency": "IQD",
+        "note": "Devlet subvansiyonu — bolgeye gore farklilık gosterir"
+      },
+      "IR": {
+        "name": "Iran",
+        "diesel_eur_per_liter": 0.04,
+        "currency": "IRR",
+        "note": "Yogun subvansiyon — yabanci araclar farkli fiyat odeyebilir"
+      },
+      "SY": {
+        "name": "Suriye",
+        "diesel_eur_per_liter": 0.55,
+        "currency": "SYP",
+        "note": "Piyasa fiyati — resmi fiyat farkli olabilir, guzergah guvenligini kontrol edin"
+      }
+    }
+  }
+}
