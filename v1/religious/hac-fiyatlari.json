@@ -1,0 +1,35 @@
+{
+  "yil": 2026,
+  "bulletin_date": "2025-11-01",
+  "source": "Diyanet İşleri Başkanlığı — Hac Hizmetleri Genel Müdürlüğü",
+  "source_url": "https://hacumre.diyanet.gov.tr",
+  "paketler": [
+    {
+      "tur": "4_kisilik_oda",
+      "label": "4 Kişilik Oda (Ekonomik)",
+      "sar": 26000
+    },
+    {
+      "tur": "3_kisilik_oda",
+      "label": "3 Kişilik Oda",
+      "sar": 27750
+    },
+    {
+      "tur": "2_kisilik_oda",
+      "label": "2 Kişilik Oda",
+      "sar": 29750
+    },
+    {
+      "tur": "yakin_mesafe_min",
+      "label": "Yakın Mesafe (min)",
+      "sar": 63500
+    },
+    {
+      "tur": "yakin_mesafe_max",
+      "label": "Yakın Mesafe (max)",
+      "sar": 90000
+    }
+  ],
+  "updated_at": "2026-06-04T13:28:05.932Z",
+  "is_stale": false
+}
