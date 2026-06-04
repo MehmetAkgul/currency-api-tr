@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-06-04T13:32:13.501Z",
+  "updated_at": "2026-06-04T14:00:00.000Z",
   "manually_updated": "2026-06-04",
   "is_stale": false,
   "source": "Manuel guncelleme — GlobalPetrolPrices.com referans alinarak",
@@ -9,18 +9,19 @@
     "turkey": {
       "TR": {
         "name": "Turkiye",
-        "diesel_try_per_liter": 46.5,
+        "diesel_try_per_liter": 66.3,
         "diesel_eur_per_liter": null,
         "currency": "TRY",
-        "note": "EPDK haftalik belirleme"
+        "note": "EPDK haftalik belirleme — hakedis.org referans"
       }
     },
     "bdt": {
       "RU": {
         "name": "Rusya",
-        "diesel_rub_per_liter": 64,
-        "diesel_eur_per_liter": 0.71,
-        "currency": "RUB"
+        "diesel_rub_per_liter": 76.5,
+        "diesel_eur_per_liter": 0.78,
+        "currency": "RUB",
+        "note": "autotraveler.ru referans — Haziran 2026"
       },
       "KZ": {
         "name": "Kazakistan",
