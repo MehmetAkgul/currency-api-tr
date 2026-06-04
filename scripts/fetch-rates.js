@@ -24,6 +24,9 @@ async function fetchTruncgil() {
   }
 }
 
+// RULE: always fetch from official central bank API first;
+//       fawaz is fallback only — never the sole source for any currency.
+
 async function fetchFawaz() {
   const url = 'https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/try.json';
   try {
@@ -35,6 +38,84 @@ async function fetchFawaz() {
     return await res.json();
   } catch (err) {
     console.error('fawaz error:', err.message);
+    return null;
+  }
+}
+
+// NBG (National Bank of Georgia) — GEL cross-rate via USD
+async function fetchNBG() {
+  try {
+    const res = await fetch('https://nbg.gov.ge/gw/api/ct/monetarypolicy/currencies/en/json/', {
+      headers: { 'User-Agent': 'currency-api-tr/1.0' },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const currencies = data[0]?.currencies || [];
+    const usdEntry = currencies.find(c => c.code === 'USD');
+    if (!usdEntry) throw new Error('USD not found in NBG response');
+    const gelPerUsd = parseFloat(usdEntry.rate) / (usdEntry.quantity || 1);
+    if (isNaN(gelPerUsd) || gelPerUsd <= 0) throw new Error('Invalid GEL rate');
+    return gelPerUsd; // 1 USD = X GEL
+  } catch (err) {
+    console.warn('NBG (GEL) error:', err.message);
+    return null;
+  }
+}
+
+// NBRB (National Bank of Republic of Belarus) — BYN cross-rate via USD
+async function fetchNBRB() {
+  try {
+    const res = await fetch('https://api.nbrb.by/exrates/rates/USD?periodicity=0', {
+      headers: { 'User-Agent': 'currency-api-tr/1.0' },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const scale = data.Cur_Scale || 1;
+    const rate  = parseFloat(data.Cur_OfficialRate);
+    if (isNaN(rate) || rate <= 0) throw new Error('Invalid BYN rate');
+    return rate / scale; // 1 USD = X BYN
+  } catch (err) {
+    console.warn('NBRB (BYN) error:', err.message);
+    return null;
+  }
+}
+
+// CBU (Central Bank of Uzbekistan) — UZS cross-rate via USD
+async function fetchCBU() {
+  try {
+    const res = await fetch('https://cbu.uz/en/arkhiv-kursov-valyut/json/', {
+      headers: { 'User-Agent': 'currency-api-tr/1.0' },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const usdEntry = data.find(c => c.Ccy === 'USD');
+    if (!usdEntry) throw new Error('USD not found in CBU response');
+    const uzsPerUsd = parseFloat(usdEntry.Rate);
+    if (isNaN(uzsPerUsd) || uzsPerUsd <= 0) throw new Error('Invalid UZS rate');
+    return uzsPerUsd; // 1 USD = X UZS
+  } catch (err) {
+    console.warn('CBU (UZS) error:', err.message);
+    return null;
+  }
+}
+
+// Frankfurter (ECB data) — HUF cross-rate via EUR
+async function fetchFrankfurter() {
+  try {
+    const res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=HUF', {
+      headers: { 'User-Agent': 'currency-api-tr/1.0' },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const hufPerEur = parseFloat(data.rates?.HUF);
+    if (isNaN(hufPerEur) || hufPerEur <= 0) throw new Error('Invalid HUF rate');
+    return hufPerEur; // 1 EUR = X HUF
+  } catch (err) {
+    console.warn('Frankfurter (HUF) error:', err.message);
     return null;
   }
 }
@@ -97,11 +178,15 @@ const GOLD_KEY_MAP = {
 async function main() {
   console.log('Fetching exchange rates...');
 
-  const [tcmbRates, truncgilData, fawazData, bigparaData] = await Promise.all([
+  const [tcmbRates, truncgilData, fawazData, bigparaData, nbgUsdGel, nbrbUsdByn, cbuUsdUzs, frkEurHuf] = await Promise.all([
     parseTCMB(),
     fetchTruncgil(),
     fetchFawaz(),
-    fetchBigpara()
+    fetchBigpara(),
+    fetchNBG(),
+    fetchNBRB(),
+    fetchCBU(),
+    fetchFrankfurter(),
   ]);
 
   if (!tcmbRates && !truncgilData) {
@@ -144,17 +229,66 @@ async function main() {
     console.log('truncgil: gold prices fetched');
   }
 
-  // 3. fawaz — UZS, HUF, XAG (silver), XPT (platinum)
-  //    These are not available from TCMB or truncgil.
-  if (fawazData?.try) {
-    sources.push('fawaz');
-    const ft = fawazData.try;
+  // 3. Direct central bank APIs: GEL, BYN, UZS, HUF
+  //    Cross-rate formula: 1 CURRENCY = (TCMB USD/EUR ask) / (foreign USD/EUR per CURRENCY)
+  const tcmbUsdAsk = tcmbRates?.USD?.ask;
+  const tcmbEurAsk = tcmbRates?.EUR?.ask;
 
-    // UZS — Uzbekistani som
-    if (ft.uzs && ft.uzs > 0) {
-      const uzsRate = 1 / ft.uzs;
-      tryObj['uzs'] = { bid: parseFloat(uzsRate.toFixed(6)), ask: parseFloat(uzsRate.toFixed(6)) };
-    }
+  // GEL — Georgian Lari (NBG → fawaz fallback)
+  let gelTry = null;
+  if (nbgUsdGel && tcmbUsdAsk) {
+    gelTry = tcmbUsdAsk / nbgUsdGel;
+    console.log(`NBG: GEL = ${gelTry.toFixed(4)} TRY`);
+  } else if (fawazData?.try?.gel && fawazData.try.gel > 0) {
+    gelTry = 1 / fawazData.try.gel;
+    console.warn('NBG failed — GEL from fawaz fallback');
+  }
+  if (gelTry) tryObj['gel'] = { bid: parseFloat(gelTry.toFixed(4)), ask: parseFloat(gelTry.toFixed(4)) };
+
+  // BYN — Belarusian Ruble (NBRB → fawaz fallback)
+  let bynTry = null;
+  if (nbrbUsdByn && tcmbUsdAsk) {
+    bynTry = tcmbUsdAsk / nbrbUsdByn;
+    console.log(`NBRB: BYN = ${bynTry.toFixed(4)} TRY`);
+  } else if (fawazData?.try?.byn && fawazData.try.byn > 0) {
+    bynTry = 1 / fawazData.try.byn;
+    console.warn('NBRB failed — BYN from fawaz fallback');
+  }
+  if (bynTry) tryObj['byn'] = { bid: parseFloat(bynTry.toFixed(4)), ask: parseFloat(bynTry.toFixed(4)) };
+
+  // UZS — Uzbekistani Som (CBU → fawaz fallback)
+  let uzsTry = null;
+  if (cbuUsdUzs && tcmbUsdAsk) {
+    uzsTry = tcmbUsdAsk / cbuUsdUzs;
+    console.log(`CBU: UZS = ${uzsTry.toFixed(6)} TRY`);
+  } else if (fawazData?.try?.uzs && fawazData.try.uzs > 0) {
+    uzsTry = 1 / fawazData.try.uzs;
+    console.warn('CBU failed — UZS from fawaz fallback');
+  }
+  if (uzsTry) tryObj['uzs'] = { bid: parseFloat(uzsTry.toFixed(6)), ask: parseFloat(uzsTry.toFixed(6)) };
+
+  // HUF — Hungarian Forint (Frankfurter/ECB → fawaz fallback)
+  let hufTry = null;
+  if (frkEurHuf && tcmbEurAsk) {
+    hufTry = tcmbEurAsk / frkEurHuf;
+    console.log(`Frankfurter: HUF = ${hufTry.toFixed(4)} TRY`);
+  } else if (fawazData?.try?.huf && fawazData.try.huf > 0) {
+    hufTry = 1 / fawazData.try.huf;
+    console.warn('Frankfurter failed — HUF from fawaz fallback');
+  }
+  if (hufTry) tryObj['huf'] = { bid: parseFloat(hufTry.toFixed(4)), ask: parseFloat(hufTry.toFixed(4)) };
+
+  // IQD — Iraqi Dinar (no reliable official source — fawaz only)
+  if (fawazData?.try?.iqd && fawazData.try.iqd > 0) {
+    const iqdTry = 1 / fawazData.try.iqd;
+    tryObj['iqd'] = { bid: parseFloat(iqdTry.toFixed(6)), ask: parseFloat(iqdTry.toFixed(6)) };
+    console.log(`fawaz: IQD = ${iqdTry.toFixed(6)} TRY`);
+  }
+
+  // XAG, XPT — precious metals (fawaz only, no official free source)
+  if (fawazData?.try) {
+    const ft = fawazData.try;
+    if (!sources.includes('fawaz')) sources.push('fawaz');
 
     // XAG — silver gram (troy oz → gram: 1 troy oz = 31.1035 g)
     if (ft.xag && ft.xag > 0) {
@@ -173,17 +307,16 @@ async function main() {
         ask: parseFloat(xptGramTRY.toFixed(4))
       };
     }
-
-    // HUF — Hungarian forint (not listed by TCMB)
-    if (ft.huf && ft.huf > 0) {
-      const hufRate = 1 / ft.huf;
-      tryObj['huf'] = { bid: parseFloat(hufRate.toFixed(4)), ask: parseFloat(hufRate.toFixed(4)) };
-    }
-
-    console.log('fawaz: UZS, HUF, XAG, XPT fetched');
+    console.log('fawaz: XAG, XPT, IQD fetched');
   } else {
-    console.warn('fawaz failed — xag/xpt/uzs/huf will be missing');
+    console.warn('fawaz failed — xag/xpt/iqd missing');
   }
+
+  // Track which direct sources succeeded
+  if (nbgUsdGel)   sources.push('nbg');
+  if (nbrbUsdByn)  sources.push('nbrb');
+  if (cbuUsdUzs)   sources.push('cbu');
+  if (frkEurHuf)   sources.push('frankfurter');
 
   // 4. bigpara gold fallback — used only when truncgil is down
   //    Derives quarter/half/full coin prices from gram price using standard weights + market premium coefficients.

@@ -69,11 +69,11 @@ Values represent `1 / ask` — how many units of TRY equal 1 unit of each curren
 
 ## Supported Currencies
 
-### Forex (23 currencies — official TCMB bid/ask)
+### Forex (22 currencies — official TCMB bid/ask)
 `usd` `eur` `gbp` `chf` `jpy` `sar` `aed` `azn` `cny` `kzt` `krw` `qar` `rub` `cad` `aud` `sek` `nok` `dkk` `ron` `pkr` `kwd` `xdr`
 
-### Additional (fawaz CDN — single rate)
-`uzs` `huf`
+### Additional (direct central bank APIs — cross-rate via TCMB)
+`gel` (NBG) `byn` (NBRB) `uzs` (CBU) `huf` (Frankfurter/ECB) `iqd` (fawaz fallback)
 
 ### Gold & Metals
 `xau_gram` `xau_ceyrek` `xau_yarim` `xau_tam` `xau_cumhuriyet` `xag_gram` `xpt_gram`
@@ -87,7 +87,13 @@ Values represent `1 / ask` — how many units of TRY equal 1 unit of each curren
 | [TCMB](https://www.tcmb.gov.tr) (Turkey's Central Bank) | Official bid/ask rates for 22 currencies | Business days ~15:30 TST |
 | [truncgil](https://finans.truncgil.com) | Gram gold, quarter/half/full/republic coins — bid/ask | Live (primary) |
 | [BigPara](https://bigpara.hurriyet.com.tr) | Gram gold fallback when truncgil is down | Live |
-| [fawazahmed0](https://github.com/fawazahmed0/exchange-api) | UZS, HUF, XAG (silver), XPT (platinum) | Daily |
+| [NBG](https://nbg.gov.ge) (National Bank of Georgia) | GEL/USD cross-rate with TCMB | Daily |
+| [NBRB](https://api.nbrb.by) (National Bank of Belarus) | BYN/USD cross-rate with TCMB | Daily |
+| [CBU](https://cbu.uz) (Central Bank of Uzbekistan) | UZS/USD cross-rate with TCMB | Daily |
+| [Frankfurter](https://api.frankfurter.app) (ECB data) | HUF/EUR cross-rate with TCMB | Business days |
+| [fawazahmed0](https://github.com/fawazahmed0/exchange-api) | IQD, XAG (silver), XPT (platinum) — fallback for above | Daily |
+
+**Fallback rule:** official central bank API → fawaz → previous JSON (`is_stale: true`)
 
 ### Gold fallback chain
 `truncgil` → `bigpara` → previous JSON (`is_stale: true`)
