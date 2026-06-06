@@ -175,11 +175,24 @@ const GOLD_KEY_MAP = {
   'cumhuriyet-altini': 'xau_cumhuriyet'
 };
 
+async function fetchTCMBWithRetry(maxAttempts = 3) {
+  for (let i = 1; i <= maxAttempts; i++) {
+    const result = await parseTCMB();
+    if (result) return result;
+    if (i < maxAttempts) {
+      console.warn(`TCMB attempt ${i}/${maxAttempts} failed, retrying in 5s...`);
+      await new Promise(r => setTimeout(r, 5000));
+    }
+  }
+  console.warn(`TCMB failed after ${maxAttempts} attempts — truncgil currency fallback will be used`);
+  return null;
+}
+
 async function main() {
   console.log('Fetching exchange rates...');
 
   const [tcmbRates, truncgilData, fawazData, bigparaData, nbgUsdGel, nbrbUsdByn, cbuUsdUzs, frkEurHuf] = await Promise.all([
-    parseTCMB(),
+    fetchTCMBWithRetry(3),
     fetchTruncgil(),
     fetchFawaz(),
     fetchBigpara(),
@@ -210,29 +223,52 @@ async function main() {
     console.log(`TCMB: ${Object.keys(tcmbRates).length} currencies fetched`);
   }
 
-  // 2. truncgil gold prices (primary gold source)
+  // 2. truncgil — gold prices (primary) + currency fallback when TCMB fails
   let truncgilOk = false;
   if (truncgilData) {
     truncgilOk = true;
-    sources.push('truncgil');
+    if (!sources.includes('truncgil')) sources.push('truncgil');
+
+    // 2a. Gold prices from truncgil (always used)
     for (const [truncKey, outKey] of Object.entries(GOLD_KEY_MAP)) {
       const entry = truncgilData[truncKey];
       if (!entry) continue;
-
       const bid = parseTR(entry['Alış']);
       const ask = parseTR(entry['Satış']);
-
       if (!isNaN(bid) && !isNaN(ask)) {
         tryObj[outKey] = { bid, ask };
       }
     }
     console.log('truncgil: gold prices fetched');
+
+    // 2b. Currency fallback — used when TCMB fails (e.g. IP block in GitHub Actions)
+    if (!tcmbRates) {
+      const TRUNCGIL_CURRENCY_MAP = {
+        'USD': 'usd', 'EUR': 'eur', 'GBP': 'gbp', 'CHF': 'chf', 'JPY': 'jpy',
+        'SAR': 'sar', 'AED': 'aed', 'AZN': 'azn', 'CAD': 'cad', 'AUD': 'aud',
+        'RUB': 'rub', 'DKK': 'dkk', 'SEK': 'sek', 'NOK': 'nok', 'KWD': 'kwd',
+        'ZAR': 'zar', 'BHD': 'bhd',
+      };
+      let trCurrencyCount = 0;
+      for (const [truncKey, outKey] of Object.entries(TRUNCGIL_CURRENCY_MAP)) {
+        const entry = truncgilData[truncKey];
+        if (!entry) continue;
+        const bid = parseTR(entry['Alış']);
+        const ask = parseTR(entry['Satış']);
+        if (!isNaN(bid) && bid > 0 && !isNaN(ask) && ask > 0) {
+          tryObj[outKey] = { bid, ask };
+          trCurrencyCount++;
+        }
+      }
+      console.log(`truncgil: TCMB failed — ${trCurrencyCount} currencies from truncgil fallback`);
+    }
   }
 
   // 3. Direct central bank APIs: GEL, BYN, UZS, HUF
-  //    Cross-rate formula: 1 CURRENCY = (TCMB USD/EUR ask) / (foreign USD/EUR per CURRENCY)
-  const tcmbUsdAsk = tcmbRates?.USD?.ask;
-  const tcmbEurAsk = tcmbRates?.EUR?.ask;
+  //    Cross-rate formula: 1 CURRENCY = (ref USD/EUR ask) / (foreign USD/EUR per CURRENCY)
+  //    Prefer TCMB reference rates; fall back to truncgil if TCMB failed
+  const tcmbUsdAsk = tcmbRates?.USD?.ask ?? (tryObj['usd']?.ask ?? null);
+  const tcmbEurAsk = tcmbRates?.EUR?.ask ?? (tryObj['eur']?.ask ?? null);
 
   // GEL — Georgian Lari (NBG → fawaz fallback)
   let gelTry = null;
