@@ -1,9 +1,10 @@
 {
   "date": "2026-06-07",
-  "updated_at": "2026-06-07T16:58:02.622Z",
-  "is_stale": true,
+  "updated_at": "2026-06-07T18:00:43.388Z",
+  "is_stale": false,
   "sources": [
     "tcmb",
+    "truncgil",
     "fawaz",
     "nbg",
     "frankfurter"
@@ -93,6 +94,26 @@
       "bid": 148.7248,
       "ask": 150.6708
     },
+    "xau_gram": {
+      "bid": 6408.3,
+      "ask": 6409.16
+    },
+    "xau_ceyrek": {
+      "bid": 10403.63,
+      "ask": 10650.95
+    },
+    "xau_yarim": {
+      "bid": 20742.24,
+      "ask": 21301.9
+    },
+    "xau_tam": {
+      "bid": 41614.53,
+      "ask": 42473.51
+    },
+    "xau_cumhuriyet": {
+      "bid": 43081,
+      "ask": 43748
+    },
     "gel": {
       "bid": 17.2652,
       "ask": 17.2652
@@ -120,26 +141,6 @@
     "xpt_gram": {
       "bid": 2642.4265,
       "ask": 2642.4265
-    },
-    "xau_gram": {
-      "bid": 6408.3,
-      "ask": 6409.16
-    },
-    "xau_ceyrek": {
-      "bid": 10403.63,
-      "ask": 10650.95
-    },
-    "xau_yarim": {
-      "bid": 20742.24,
-      "ask": 21301.9
-    },
-    "xau_tam": {
-      "bid": 41614.53,
-      "ask": 42473.51
-    },
-    "xau_cumhuriyet": {
-      "bid": 43081,
-      "ask": 43748
     }
   }
 }
