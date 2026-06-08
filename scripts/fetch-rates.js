@@ -1,5 +1,6 @@
 import { writeFileSync, readFileSync } from 'fs';
 import { execSync } from 'child_process';
+import { fileURLToPath } from 'url';
 import { Agent, fetch as uFetch } from 'undici';
 import { parseTCMB } from './parse-tcmb.js';
 
@@ -507,4 +508,4 @@ async function main() {
   }
 }
 
-if (process.argv[1]?.endsWith('fetch-rates.js')) main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) main();

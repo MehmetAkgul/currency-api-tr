@@ -15,33 +15,33 @@ describe('validateWithBigpara', () => {
     assert.doesNotThrow(() => validateWithBigpara({ data: { items: [] } }, { EUR: { bid: 40.0, ask: 40.5 } }));
   });
 
-  it('USD sapması %3 → warn yok', (t) => {
+  it('USD sapması %3 → warn yok', () => {
     const warns = [];
     const origWarn = console.warn;
     console.warn = (...args) => warns.push(args.join(' '));
-
-    const tcmbBid = 38.5;
-    const bpBid = tcmbBid * 1.03; // %3 sapma — eşiğin altında
-    const bigparaData = { data: { items: [{ code: 'USD', alis: String(bpBid) }] } };
-    validateWithBigpara(bigparaData, { USD: { bid: tcmbBid, ask: 38.7 } });
-
-    console.warn = origWarn;
-    const deviationWarns = warns.filter(w => w.includes('deviation'));
-    assert.equal(deviationWarns.length, 0);
+    try {
+      const tcmbBid = 38.5;
+      const bpBid = tcmbBid * 1.03;
+      validateWithBigpara(
+        { data: { items: [{ code: 'USD', alis: String(bpBid) }] } },
+        { USD: { bid: tcmbBid, ask: 38.7 } }
+      );
+      assert.equal(warns.filter(w => w.includes('deviation')).length, 0);
+    } finally { console.warn = origWarn; }
   });
 
-  it('USD sapması %7 → warn var', (t) => {
+  it('USD sapması %7 → warn var', () => {
     const warns = [];
     const origWarn = console.warn;
     console.warn = (...args) => warns.push(args.join(' '));
-
-    const tcmbBid = 38.5;
-    const bpBid = tcmbBid * 1.07; // %7 sapma — eşiğin üzerinde
-    const bigparaData = { data: { items: [{ code: 'USD', alis: String(bpBid) }] } };
-    validateWithBigpara(bigparaData, { USD: { bid: tcmbBid, ask: 38.7 } });
-
-    console.warn = origWarn;
-    const deviationWarns = warns.filter(w => w.includes('deviation'));
-    assert.equal(deviationWarns.length, 1);
+    try {
+      const tcmbBid = 38.5;
+      const bpBid = tcmbBid * 1.07;
+      validateWithBigpara(
+        { data: { items: [{ code: 'USD', alis: String(bpBid) }] } },
+        { USD: { bid: tcmbBid, ask: 38.7 } }
+      );
+      assert.equal(warns.filter(w => w.includes('deviation')).length, 1);
+    } finally { console.warn = origWarn; }
   });
 });

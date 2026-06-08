@@ -29,6 +29,9 @@ jobs:
 
       - run: npm ci
 
+      - name: Run tests
+        run: npm test
+
       - name: Fetch and update rates
         run: node scripts/fetch-rates.js
         env:
