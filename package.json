@@ -4,7 +4,8 @@
   "description": "TR döviz ve altın API — TCMB + truncgil + fawaz kaynakları",
   "type": "module",
   "scripts": {
-    "fetch": "node scripts/fetch-rates.js"
+    "fetch": "node scripts/fetch-rates.js",
+    "test": "node --test tests/parseTR.test.js tests/maps.test.js tests/isStale.test.js tests/validateWithBigpara.test.js"
   },
   "dependencies": {
     "undici": "^6.19.2",

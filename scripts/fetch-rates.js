@@ -7,7 +7,7 @@ import { parseTCMB } from './parse-tcmb.js';
 const insecureAgent = new Agent({ connect: { rejectUnauthorized: false } });
 
 // Parses Turkish number format: "45.823,50" → 45823.50
-function parseTR(str) {
+export function parseTR(str) {
   if (!str || str === '') return NaN;
   return parseFloat(str.replace(/\./g, '').replace(',', '.'));
 }
@@ -139,7 +139,7 @@ async function fetchBigpara() {
 }
 
 // Sanity check: warn if bigpara USD deviates >5% from TCMB
-function validateWithBigpara(bigparaData, tcmbRates) {
+export function validateWithBigpara(bigparaData, tcmbRates) {
   if (!bigparaData || !tcmbRates?.USD) return;
   try {
     const items = bigparaData?.data?.items || bigparaData?.items || [];
@@ -161,7 +161,7 @@ function validateWithBigpara(bigparaData, tcmbRates) {
 }
 
 // TCMB currency code → try object key
-const TCMB_KEY_MAP = {
+export const TCMB_KEY_MAP = {
   USD: 'usd', EUR: 'eur', GBP: 'gbp', CHF: 'chf', JPY: 'jpy',
   SAR: 'sar', AED: 'aed', AZN: 'azn', CNY: 'cny', KZT: 'kzt',
   KRW: 'krw', QAR: 'qar', RUB: 'rub', CAD: 'cad', AUD: 'aud',
@@ -170,13 +170,24 @@ const TCMB_KEY_MAP = {
 };
 
 // truncgil gold key → output key
-const GOLD_KEY_MAP = {
+export const GOLD_KEY_MAP = {
   'gram-altin':      'xau_gram',
   'ceyrek-altin':    'xau_ceyrek',
   'yarim-altin':     'xau_yarim',
   'tam-altin':       'xau_tam',
   'cumhuriyet-altini': 'xau_cumhuriyet'
 };
+
+export const CORE_FOREX_KEYS = [
+  'usd', 'eur', 'gbp', 'chf', 'jpy', 'sar', 'aed', 'azn',
+  'cny', 'kzt', 'krw', 'qar', 'rub', 'cad', 'aud', 'sek', 'nok', 'dkk',
+  'ron', 'pkr', 'kwd', 'xdr',
+];
+export const ESSENTIAL_FOREX = ['usd', 'eur', 'gbp', 'chf'];
+
+export function computeIsStale({ truncgilOk, bigparaGoldOk, usedStaleGold, usedStaleForex, forexMissing }) {
+  return (!truncgilOk && !bigparaGoldOk) || usedStaleGold || usedStaleForex || forexMissing;
+}
 
 async function fetchTCMBWithRetry(maxAttempts = 3) {
   for (let i = 1; i <= maxAttempts; i++) {
@@ -410,11 +421,6 @@ async function main() {
   }
 
   // Temel forex — TCMB + truncgil ikisi de düştüyse önceki run'dan restore
-  const CORE_FOREX_KEYS = [
-    'usd', 'eur', 'gbp', 'chf', 'jpy', 'sar', 'aed', 'azn',
-    'cny', 'kzt', 'krw', 'qar', 'rub', 'cad', 'aud', 'sek', 'nok', 'dkk',
-    'ron', 'pkr', 'kwd', 'xdr',
-  ];
   let usedStaleForex = false;
   for (const k of CORE_FOREX_KEYS) {
     if (!tryObj[k] && existingTry[k]) {
@@ -427,9 +433,8 @@ async function main() {
   }
 
   const bigparaGoldOk = sources.includes('bigpara(gold)');
-  const ESSENTIAL_FOREX = ['usd', 'eur', 'gbp', 'chf'];
   const forexMissing = ESSENTIAL_FOREX.some(k => !tryObj[k]);
-  const isStale = (!truncgilOk && !bigparaGoldOk) || usedStaleGold || usedStaleForex || forexMissing;
+  const isStale = computeIsStale({ truncgilOk, bigparaGoldOk, usedStaleGold, usedStaleForex, forexMissing });
 
   // Build try-full.json — rich format with bid/ask and gold
   const tryFull = {
@@ -502,4 +507,4 @@ async function main() {
   }
 }
 
-main();
+if (process.argv[1]?.endsWith('fetch-rates.js')) main();
