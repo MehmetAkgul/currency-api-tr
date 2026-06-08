@@ -414,22 +414,22 @@ async function main() {
     'usd', 'eur', 'gbp', 'chf', 'jpy', 'sar', 'aed', 'azn',
     'cny', 'kzt', 'krw', 'qar', 'rub', 'cad', 'aud', 'sek', 'nok', 'dkk',
     'ron', 'pkr', 'kwd', 'xdr',
-  ]
-  let usedStaleForex = false
+  ];
+  let usedStaleForex = false;
   for (const k of CORE_FOREX_KEYS) {
     if (!tryObj[k] && existingTry[k]) {
-      tryObj[k] = existingTry[k]
-      usedStaleForex = true
+      tryObj[k] = existingTry[k];
+      usedStaleForex = true;
     }
   }
   if (usedStaleForex) {
-    console.warn('[currency-api-tr] TCMB + truncgil currency down — cached forex rates used')
+    console.warn('[currency-api-tr] TCMB + truncgil currency down — cached forex rates used');
   }
 
   const bigparaGoldOk = sources.includes('bigpara(gold)');
-  const ESSENTIAL_FOREX = ['usd', 'eur', 'gbp', 'chf']
-  const forexMissing = ESSENTIAL_FOREX.some(k => !tryObj[k])
-  const isStale = (!truncgilOk && !bigparaGoldOk) || usedStaleGold || usedStaleForex || forexMissing
+  const ESSENTIAL_FOREX = ['usd', 'eur', 'gbp', 'chf'];
+  const forexMissing = ESSENTIAL_FOREX.some(k => !tryObj[k]);
+  const isStale = (!truncgilOk && !bigparaGoldOk) || usedStaleGold || usedStaleForex || forexMissing;
 
   // Build try-full.json — rich format with bid/ask and gold
   const tryFull = {
