@@ -15,7 +15,10 @@ function parseTR(str) {
 async function fetchTruncgil() {
   const url = 'https://finans.truncgil.com/today.json';
   try {
-    const res = await uFetch(url, { dispatcher: insecureAgent });
+    const res = await uFetch(url, {
+      dispatcher: insecureAgent,
+      signal: AbortSignal.timeout(8000)
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (err) {
@@ -248,6 +251,13 @@ async function main() {
         'SAR': 'sar', 'AED': 'aed', 'AZN': 'azn', 'CAD': 'cad', 'AUD': 'aud',
         'RUB': 'rub', 'DKK': 'dkk', 'SEK': 'sek', 'NOK': 'nok', 'KWD': 'kwd',
         'ZAR': 'zar', 'BHD': 'bhd',
+        'CNY': 'cny',
+        'KRW': 'krw',
+        'RON': 'ron',
+        'PKR': 'pkr',
+        'KZT': 'kzt',
+        'QAR': 'qar',
+        'XDR': 'xdr',
       };
       let trCurrencyCount = 0;
       for (const [truncKey, outKey] of Object.entries(TRUNCGIL_CURRENCY_MAP)) {
@@ -399,8 +409,27 @@ async function main() {
     console.warn('truncgil + bigpara both down — using cached gold prices, is_stale: true');
   }
 
+  // Temel forex — TCMB + truncgil ikisi de düştüyse önceki run'dan restore
+  const CORE_FOREX_KEYS = [
+    'usd', 'eur', 'gbp', 'chf', 'jpy', 'sar', 'aed', 'azn',
+    'cny', 'kzt', 'krw', 'qar', 'rub', 'cad', 'aud', 'sek', 'nok', 'dkk',
+    'ron', 'pkr', 'kwd', 'xdr',
+  ]
+  let usedStaleForex = false
+  for (const k of CORE_FOREX_KEYS) {
+    if (!tryObj[k] && existingTry[k]) {
+      tryObj[k] = existingTry[k]
+      usedStaleForex = true
+    }
+  }
+  if (usedStaleForex) {
+    console.warn('[currency-api-tr] TCMB + truncgil currency down — cached forex rates used')
+  }
+
   const bigparaGoldOk = sources.includes('bigpara(gold)');
-  const isStale = (!truncgilOk && !bigparaGoldOk) || usedStaleGold;
+  const ESSENTIAL_FOREX = ['usd', 'eur', 'gbp', 'chf']
+  const forexMissing = ESSENTIAL_FOREX.some(k => !tryObj[k])
+  const isStale = (!truncgilOk && !bigparaGoldOk) || usedStaleGold || usedStaleForex || forexMissing
 
   // Build try-full.json — rich format with bid/ask and gold
   const tryFull = {
