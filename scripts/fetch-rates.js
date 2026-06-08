@@ -203,7 +203,12 @@ async function fetchTCMBWithRetry(maxAttempts = 3) {
   return null;
 }
 
+function withMeta(entry, source, ts = new Date().toISOString(), stale = false) {
+  return { ...entry, source, updated_at: ts, stale };
+}
+
 async function main() {
+  const RUN_TS = new Date().toISOString(); // bu run'ın timestamp'i
   console.log('Fetching exchange rates...');
 
   const [tcmbRates, truncgilData, fawazData, bigparaData, nbgUsdGel, nbrbUsdByn, cbuUsdUzs, frkEurHuf] = await Promise.all([
@@ -232,7 +237,7 @@ async function main() {
     sources.push('tcmb');
     for (const [tcmbCode, key] of Object.entries(TCMB_KEY_MAP)) {
       if (tcmbRates[tcmbCode]) {
-        tryObj[key] = tcmbRates[tcmbCode];
+        tryObj[key] = withMeta(tcmbRates[tcmbCode], 'tcmb', RUN_TS);
       }
     }
     console.log(`TCMB: ${Object.keys(tcmbRates).length} currencies fetched`);
@@ -251,7 +256,7 @@ async function main() {
       const bid = parseTR(entry['Alış']);
       const ask = parseTR(entry['Satış']);
       if (!isNaN(bid) && !isNaN(ask)) {
-        tryObj[outKey] = { bid, ask };
+        tryObj[outKey] = withMeta({ bid, ask }, 'truncgil', RUN_TS);
       }
     }
     console.log('truncgil: gold prices fetched');
@@ -278,7 +283,7 @@ async function main() {
         const bid = parseTR(entry['Alış']);
         const ask = parseTR(entry['Satış']);
         if (!isNaN(bid) && bid > 0 && !isNaN(ask) && ask > 0) {
-          tryObj[outKey] = { bid, ask };
+          tryObj[outKey] = withMeta({ bid, ask }, 'truncgil', RUN_TS);
           trCurrencyCount++;
         }
       }
@@ -294,52 +299,60 @@ async function main() {
 
   // GEL — Georgian Lari (NBG → fawaz fallback)
   let gelTry = null;
+  let gelSource = 'fawaz';
   if (nbgUsdGel && tcmbUsdAsk) {
     gelTry = tcmbUsdAsk / nbgUsdGel;
+    gelSource = 'nbg+tcmb';
     console.log(`NBG: GEL = ${gelTry.toFixed(4)} TRY`);
   } else if (fawazData?.try?.gel && fawazData.try.gel > 0) {
     gelTry = 1 / fawazData.try.gel;
     console.warn('NBG failed — GEL from fawaz fallback');
   }
-  if (gelTry) tryObj['gel'] = { bid: parseFloat(gelTry.toFixed(4)), ask: parseFloat(gelTry.toFixed(4)) };
+  if (gelTry) tryObj['gel'] = withMeta({ bid: parseFloat(gelTry.toFixed(4)), ask: parseFloat(gelTry.toFixed(4)) }, gelSource, RUN_TS);
 
   // BYN — Belarusian Ruble (NBRB → fawaz fallback)
   let bynTry = null;
+  let bynSource = 'fawaz';
   if (nbrbUsdByn && tcmbUsdAsk) {
     bynTry = tcmbUsdAsk / nbrbUsdByn;
+    bynSource = 'nbrb+tcmb';
     console.log(`NBRB: BYN = ${bynTry.toFixed(4)} TRY`);
   } else if (fawazData?.try?.byn && fawazData.try.byn > 0) {
     bynTry = 1 / fawazData.try.byn;
     console.warn('NBRB failed — BYN from fawaz fallback');
   }
-  if (bynTry) tryObj['byn'] = { bid: parseFloat(bynTry.toFixed(4)), ask: parseFloat(bynTry.toFixed(4)) };
+  if (bynTry) tryObj['byn'] = withMeta({ bid: parseFloat(bynTry.toFixed(4)), ask: parseFloat(bynTry.toFixed(4)) }, bynSource, RUN_TS);
 
   // UZS — Uzbekistani Som (CBU → fawaz fallback)
   let uzsTry = null;
+  let uzsSource = 'fawaz';
   if (cbuUsdUzs && tcmbUsdAsk) {
     uzsTry = tcmbUsdAsk / cbuUsdUzs;
+    uzsSource = 'cbu+tcmb';
     console.log(`CBU: UZS = ${uzsTry.toFixed(6)} TRY`);
   } else if (fawazData?.try?.uzs && fawazData.try.uzs > 0) {
     uzsTry = 1 / fawazData.try.uzs;
     console.warn('CBU failed — UZS from fawaz fallback');
   }
-  if (uzsTry) tryObj['uzs'] = { bid: parseFloat(uzsTry.toFixed(6)), ask: parseFloat(uzsTry.toFixed(6)) };
+  if (uzsTry) tryObj['uzs'] = withMeta({ bid: parseFloat(uzsTry.toFixed(6)), ask: parseFloat(uzsTry.toFixed(6)) }, uzsSource, RUN_TS);
 
   // HUF — Hungarian Forint (Frankfurter/ECB → fawaz fallback)
   let hufTry = null;
+  let hufSource = 'fawaz';
   if (frkEurHuf && tcmbEurAsk) {
     hufTry = tcmbEurAsk / frkEurHuf;
+    hufSource = 'frankfurter';
     console.log(`Frankfurter: HUF = ${hufTry.toFixed(4)} TRY`);
   } else if (fawazData?.try?.huf && fawazData.try.huf > 0) {
     hufTry = 1 / fawazData.try.huf;
     console.warn('Frankfurter failed — HUF from fawaz fallback');
   }
-  if (hufTry) tryObj['huf'] = { bid: parseFloat(hufTry.toFixed(4)), ask: parseFloat(hufTry.toFixed(4)) };
+  if (hufTry) tryObj['huf'] = withMeta({ bid: parseFloat(hufTry.toFixed(4)), ask: parseFloat(hufTry.toFixed(4)) }, hufSource, RUN_TS);
 
   // IQD — Iraqi Dinar (no reliable official source — fawaz only)
   if (fawazData?.try?.iqd && fawazData.try.iqd > 0) {
     const iqdTry = 1 / fawazData.try.iqd;
-    tryObj['iqd'] = { bid: parseFloat(iqdTry.toFixed(6)), ask: parseFloat(iqdTry.toFixed(6)) };
+    tryObj['iqd'] = withMeta({ bid: parseFloat(iqdTry.toFixed(6)), ask: parseFloat(iqdTry.toFixed(6)) }, 'fawaz', RUN_TS);
     console.log(`fawaz: IQD = ${iqdTry.toFixed(6)} TRY`);
   }
 
@@ -351,19 +364,19 @@ async function main() {
     // XAG — silver gram (troy oz → gram: 1 troy oz = 31.1035 g)
     if (ft.xag && ft.xag > 0) {
       const xagGramTRY = (1 / ft.xag) / 31.1035;
-      tryObj['xag_gram'] = {
+      tryObj['xag_gram'] = withMeta({
         bid: parseFloat(xagGramTRY.toFixed(4)),
         ask: parseFloat(xagGramTRY.toFixed(4))
-      };
+      }, 'fawaz', RUN_TS);
     }
 
     // XPT — platinum gram
     if (ft.xpt && ft.xpt > 0) {
       const xptGramTRY = (1 / ft.xpt) / 31.1035;
-      tryObj['xpt_gram'] = {
+      tryObj['xpt_gram'] = withMeta({
         bid: parseFloat(xptGramTRY.toFixed(4)),
         ask: parseFloat(xptGramTRY.toFixed(4))
-      };
+      }, 'fawaz', RUN_TS);
     }
     console.log('fawaz: XAG, XPT, IQD fetched');
   } else {
@@ -386,13 +399,13 @@ async function main() {
         const bid = parseFloat(String(gldItem.alis || gldItem.bid || '0').replace(',', '.'));
         const ask = parseFloat(String(gldItem.satis || gldItem.ask || '0').replace(',', '.'));
         if (bid > 0 && ask > 0) {
-          tryObj['xau_gram'] = { bid, ask };
+          tryObj['xau_gram'] = withMeta({ bid, ask }, 'bigpara', RUN_TS);
           const purity = 0.916; // 22k gold
           const COIN_PREMIUM = { ceyrek: 1.0410, yarim: 1.0400, tam: 1.0337, cumhuriyet: 1.0133 };
-          tryObj['xau_ceyrek']     = { bid: parseFloat((bid * 1.75  * purity * COIN_PREMIUM.ceyrek).toFixed(2)),     ask: parseFloat((ask * 1.75  * purity * COIN_PREMIUM.ceyrek).toFixed(2)) };
-          tryObj['xau_yarim']      = { bid: parseFloat((bid * 3.5   * purity * COIN_PREMIUM.yarim).toFixed(2)),      ask: parseFloat((ask * 3.5   * purity * COIN_PREMIUM.yarim).toFixed(2)) };
-          tryObj['xau_tam']        = { bid: parseFloat((bid * 7     * purity * COIN_PREMIUM.tam).toFixed(2)),        ask: parseFloat((ask * 7     * purity * COIN_PREMIUM.tam).toFixed(2)) };
-          tryObj['xau_cumhuriyet'] = { bid: parseFloat((bid * 7.216 * purity * COIN_PREMIUM.cumhuriyet).toFixed(2)), ask: parseFloat((ask * 7.216 * purity * COIN_PREMIUM.cumhuriyet).toFixed(2)) };
+          tryObj['xau_ceyrek']     = withMeta({ bid: parseFloat((bid * 1.75  * purity * COIN_PREMIUM.ceyrek).toFixed(2)),     ask: parseFloat((ask * 1.75  * purity * COIN_PREMIUM.ceyrek).toFixed(2)) }, 'bigpara', RUN_TS);
+          tryObj['xau_yarim']      = withMeta({ bid: parseFloat((bid * 3.5   * purity * COIN_PREMIUM.yarim).toFixed(2)),      ask: parseFloat((ask * 3.5   * purity * COIN_PREMIUM.yarim).toFixed(2)) }, 'bigpara', RUN_TS);
+          tryObj['xau_tam']        = withMeta({ bid: parseFloat((bid * 7     * purity * COIN_PREMIUM.tam).toFixed(2)),        ask: parseFloat((ask * 7     * purity * COIN_PREMIUM.tam).toFixed(2)) }, 'bigpara', RUN_TS);
+          tryObj['xau_cumhuriyet'] = withMeta({ bid: parseFloat((bid * 7.216 * purity * COIN_PREMIUM.cumhuriyet).toFixed(2)), ask: parseFloat((ask * 7.216 * purity * COIN_PREMIUM.cumhuriyet).toFixed(2)) }, 'bigpara', RUN_TS);
           sources.push('bigpara(gold)');
           console.log('bigpara: truncgil fallback — gram gold + coin derivatives calculated');
         }
@@ -413,7 +426,7 @@ async function main() {
   let usedStaleGold = false;
   for (const k of goldKeys) {
     if (!tryObj[k] && existingTry[k]) {
-      tryObj[k] = existingTry[k];
+      tryObj[k] = { ...existingTry[k], stale: true };
       usedStaleGold = true;
     }
   }
@@ -425,7 +438,7 @@ async function main() {
   let usedStaleForex = false;
   for (const k of CORE_FOREX_KEYS) {
     if (!tryObj[k] && existingTry[k]) {
-      tryObj[k] = existingTry[k];
+      tryObj[k] = { ...existingTry[k], stale: true };
       usedStaleForex = true;
     }
   }
