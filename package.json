@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "TR döviz ve altın API — TCMB + truncgil + fawaz kaynakları",
   "type": "module",
+  "license": "MIT",
   "scripts": {
     "fetch": "node scripts/fetch-rates.js",
     "test": "node --test tests/parseTR.test.js tests/maps.test.js tests/isStale.test.js tests/validateWithBigpara.test.js"
