@@ -1,100 +1,100 @@
 {
-  "date": "2026-07-13",
-  "updated_at": "2026-07-19T09:43:34.159Z",
-  "bulletin_date": "2026-07-13",
+  "date": "2026-07-20",
+  "updated_at": "2026-07-23T13:46:42.479Z",
+  "bulletin_date": "2026-07-20",
   "is_stale": false,
   "source": "EuroOilWatch — EC Weekly Oil Bulletin",
   "source_url": "https://eurooilwatch.com/api/v1/prices",
   "countries": {
     "AT": {
       "name": "Austria",
-      "diesel_eur_per_liter": 1.84,
-      "petrol_eur_per_liter": 1.762
+      "diesel_eur_per_liter": 1.931,
+      "petrol_eur_per_liter": 1.833
     },
     "BE": {
       "name": "Belgium",
-      "diesel_eur_per_liter": 1.962,
-      "petrol_eur_per_liter": 1.811
+      "diesel_eur_per_liter": 2.06,
+      "petrol_eur_per_liter": 1.856
     },
     "BG": {
       "name": "Bulgaria",
-      "diesel_eur_per_liter": 1.498,
-      "petrol_eur_per_liter": 1.46
+      "diesel_eur_per_liter": 1.578,
+      "petrol_eur_per_liter": 1.477
     },
     "HR": {
       "name": "Croatia",
-      "diesel_eur_per_liter": 1.662,
-      "petrol_eur_per_liter": 1.599
+      "diesel_eur_per_liter": 1.721,
+      "petrol_eur_per_liter": 1.601
     },
     "CY": {
       "name": "Cyprus",
-      "diesel_eur_per_liter": 1.569,
-      "petrol_eur_per_liter": 1.466
+      "diesel_eur_per_liter": 1.595,
+      "petrol_eur_per_liter": 1.485
     },
     "CZ": {
       "name": "Czechia",
-      "diesel_eur_per_liter": 1.516,
-      "petrol_eur_per_liter": 1.641
+      "diesel_eur_per_liter": 1.707,
+      "petrol_eur_per_liter": 1.72
     },
     "DK": {
       "name": "Denmark",
-      "diesel_eur_per_liter": 2.049,
-      "petrol_eur_per_liter": 2.365
+      "diesel_eur_per_liter": 2.183,
+      "petrol_eur_per_liter": 2.459
     },
     "EE": {
       "name": "Estonia",
-      "diesel_eur_per_liter": 1.686,
-      "petrol_eur_per_liter": 1.721
+      "diesel_eur_per_liter": 1.757,
+      "petrol_eur_per_liter": 1.742
     },
     "FI": {
       "name": "Finland",
-      "diesel_eur_per_liter": 2.15,
-      "petrol_eur_per_liter": 2.143
+      "diesel_eur_per_liter": 2.196,
+      "petrol_eur_per_liter": 2.163
     },
     "FR": {
       "name": "France",
-      "diesel_eur_per_liter": 1.948,
-      "petrol_eur_per_liter": 1.964
+      "diesel_eur_per_liter": 2.066,
+      "petrol_eur_per_liter": 2.01
     },
     "DE": {
       "name": "Germany",
-      "diesel_eur_per_liter": 2.015,
-      "petrol_eur_per_liter": 2.101
+      "diesel_eur_per_liter": 2.158,
+      "petrol_eur_per_liter": 2.192
     },
     "GR": {
       "name": "Greece",
-      "diesel_eur_per_liter": 1.854,
-      "petrol_eur_per_liter": 1.979
+      "diesel_eur_per_liter": 1.95,
+      "petrol_eur_per_liter": 1.977
     },
     "HU": {
       "name": "Hungary",
-      "diesel_eur_per_liter": 1.685,
-      "petrol_eur_per_liter": 1.636
+      "diesel_eur_per_liter": 1.687,
+      "petrol_eur_per_liter": 1.642
     },
     "IE": {
       "name": "Ireland",
-      "diesel_eur_per_liter": 1.689,
-      "petrol_eur_per_liter": 1.713
+      "diesel_eur_per_liter": 1.695,
+      "petrol_eur_per_liter": 1.72
     },
     "IT": {
       "name": "Italy",
-      "diesel_eur_per_liter": 1.957,
-      "petrol_eur_per_liter": 1.864
+      "diesel_eur_per_liter": 2.038,
+      "petrol_eur_per_liter": 1.91
     },
     "LV": {
       "name": "Latvia",
-      "diesel_eur_per_liter": 1.705,
-      "petrol_eur_per_liter": 1.768
+      "diesel_eur_per_liter": 1.798,
+      "petrol_eur_per_liter": 1.812
     },
     "LT": {
       "name": "Lithuania",
-      "diesel_eur_per_liter": 1.803,
-      "petrol_eur_per_liter": 1.697
+      "diesel_eur_per_liter": 1.927,
+      "petrol_eur_per_liter": 1.769
     },
     "LU": {
       "name": "Luxembourg",
-      "diesel_eur_per_liter": 1.698,
-      "petrol_eur_per_liter": 1.698
+      "diesel_eur_per_liter": 1.804,
+      "petrol_eur_per_liter": 1.726
     },
     "MT": {
       "name": "Malta",
@@ -103,43 +103,43 @@
     },
     "NL": {
       "name": "Netherlands",
-      "diesel_eur_per_liter": 2.149,
-      "petrol_eur_per_liter": 2.297
+      "diesel_eur_per_liter": 2.31,
+      "petrol_eur_per_liter": 2.341
     },
     "PL": {
       "name": "Poland",
-      "diesel_eur_per_liter": 1.612,
-      "petrol_eur_per_liter": 1.595
+      "diesel_eur_per_liter": 1.725,
+      "petrol_eur_per_liter": 1.682
     },
     "PT": {
       "name": "Portugal",
-      "diesel_eur_per_liter": 1.848,
-      "petrol_eur_per_liter": 1.913
+      "diesel_eur_per_liter": 1.96,
+      "petrol_eur_per_liter": 1.972
     },
     "RO": {
       "name": "Romania",
-      "diesel_eur_per_liter": 1.806,
-      "petrol_eur_per_liter": 1.652
+      "diesel_eur_per_liter": 1.888,
+      "petrol_eur_per_liter": 1.721
     },
     "SK": {
       "name": "Slovakia",
-      "diesel_eur_per_liter": 1.603,
-      "petrol_eur_per_liter": 1.694
+      "diesel_eur_per_liter": 1.668,
+      "petrol_eur_per_liter": 1.713
     },
     "SI": {
       "name": "Slovenia",
-      "diesel_eur_per_liter": 1.634,
-      "petrol_eur_per_liter": 1.56
+      "diesel_eur_per_liter": 1.69,
+      "petrol_eur_per_liter": 1.587
     },
     "ES": {
       "name": "Spain",
-      "diesel_eur_per_liter": 1.549,
-      "petrol_eur_per_liter": 1.542
+      "diesel_eur_per_liter": 1.622,
+      "petrol_eur_per_liter": 1.582
     },
     "SE": {
       "name": "Sweden",
-      "diesel_eur_per_liter": 1.571,
-      "petrol_eur_per_liter": 1.382
+      "diesel_eur_per_liter": 1.707,
+      "petrol_eur_per_liter": 1.439
     }
   }
 }
