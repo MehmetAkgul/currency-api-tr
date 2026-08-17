@@ -1,6 +1,6 @@
 {
   "date": "2026-08-17",
-  "updated_at": "2026-08-17T05:54:22.501Z",
+  "updated_at": "2026-08-17T06:24:07.592Z",
   "is_stale": false,
   "sources": [
     "tcmb",
@@ -15,231 +15,231 @@
       "bid": 47.7206,
       "ask": 47.8066,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "eur": {
       "bid": 55.1391,
       "ask": 55.2385,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "gbp": {
       "bid": 64.4148,
       "ask": 64.7506,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "chf": {
       "bid": 58.554,
       "ask": 58.9299,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "jpy": {
       "bid": 29.9073,
       "ask": 30.1053,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "sar": {
       "bid": 12.7113,
       "ask": 12.7342,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "aed": {
       "bid": 12.9207,
       "ask": 13.0897,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "azn": {
       "bid": 27.9136,
       "ask": 28.2788,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "cny": {
       "bid": 7.0383,
       "ask": 7.1304,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "kzt": {
       "bid": 0.10233,
       "ask": 0.10367,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "krw": {
       "bid": 0.03357,
       "ask": 0.03401,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "qar": {
       "bid": 13.0217,
       "ask": 13.1921,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "rub": {
       "bid": 0.56445,
       "ask": 0.57183,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "cad": {
       "bid": 34.3072,
       "ask": 34.4619,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "aud": {
       "bid": 33.6797,
       "ask": 33.8994,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "sek": {
       "bid": 4.985,
       "ask": 5.0366,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "nok": {
       "bid": 5.0293,
       "ask": 5.0631,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "dkk": {
       "bid": 7.3644,
       "ask": 7.4005,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "ron": {
       "bid": 10.4571,
       "ask": 10.594,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "pkr": {
       "bid": 0.17085,
       "ask": 0.17308,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "kwd": {
       "bid": 154.4446,
       "ask": 156.4655,
       "source": "tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "xau_gram": {
-      "bid": 6768.32,
-      "ask": 6769.26,
+      "bid": 6770.62,
+      "ask": 6771.58,
       "source": "truncgil",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "xau_ceyrek": {
       "bid": 10673.88,
       "ask": 10919.78,
       "source": "truncgil",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "xau_yarim": {
       "bid": 21281.05,
       "ask": 21839.56,
       "source": "truncgil",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "xau_tam": {
       "bid": 42695.53,
       "ask": 43545.55,
       "source": "truncgil",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "xau_cumhuriyet": {
       "bid": 44405,
       "ask": 45077,
       "source": "truncgil",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "gel": {
       "bid": 18.2733,
       "ask": 18.2733,
       "source": "nbg+tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "byn": {
       "bid": 15.7874,
       "ask": 15.7874,
       "source": "fawaz",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "uzs": {
       "bid": 0.00402,
       "ask": 0.00402,
       "source": "cbu+tcmb",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "huf": {
       "bid": 0.1523,
       "ask": 0.1523,
       "source": "frankfurter",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "iqd": {
       "bid": 0.036599,
       "ask": 0.036599,
       "source": "fawaz",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "xag_gram": {
       "bid": 99.76,
       "ask": 99.76,
       "source": "fawaz",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     },
     "xpt_gram": {
       "bid": 2703.5159,
       "ask": 2703.5159,
       "source": "fawaz",
-      "updated_at": "2026-08-17T05:54:19.179Z",
+      "updated_at": "2026-08-17T06:24:04.948Z",
       "stale": false
     }
   }
